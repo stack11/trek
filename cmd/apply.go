@@ -39,8 +39,8 @@ var applyCmd = &cobra.Command{
 		pgHost := os.Getenv("PGHOST")
 		pgUser := os.Getenv("PGUSER")
 		pgPassword := os.Getenv("PGPASSWORD")
-		resetDB := os.Getenv("RESET_DB") == "true"
-		insertTestData := os.Getenv("INSERT_TEST_DATA") == "true"
+		resetDB := os.Getenv("RESET_DB") == "true" || os.Getenv("TREK_RESET_DB") == "true" //nolint:goconst
+		applyTestdata := os.Getenv("INSERT_TEST_DATA") == "true" || os.Getenv("TREK_APPLY_TESTDATA") == "true"
 		sslMode := internal.GetSSLMode()
 		migrateDSN := fmt.Sprintf(
 			"postgres://%s:%s@%s:5432/%s?sslmode=%s",
@@ -101,7 +101,7 @@ var applyCmd = &cobra.Command{
 				} else if err != nil {
 					log.Fatalln(err)
 				}
-				if insertTestData {
+				if applyTestdata {
 					err = filepath.Walk(filepath.Join(wd, "testdata"), func(p string, info fs.FileInfo, err error) error {
 						if strings.HasPrefix(path.Base(p), fmt.Sprintf("%03d", index+1)) {
 							log.Printf("Inserting test data %s\n", path.Base(p))
