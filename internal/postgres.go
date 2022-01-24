@@ -25,22 +25,18 @@ func getEnv(password, sslmode string) []string {
 	)
 }
 
-func PsqlIsDatabaseUp(ip, user, password, sslmode string) (up bool, out []byte) {
-	cmdPsql := exec.Command(
-		"psql",
-		"--echo-errors",
-		"--variable",
-		"ON_ERROR_STOP=1",
+func PgIsReady(ip, user, password, sslmode string) (up bool, out []byte) {
+	cmdPgIsReady := exec.Command(
+		"pg_isready",
 		"--user",
 		user,
 		"--host",
 		ip,
-		"--command",
-		"\\l",
+		"--dbname",
 		PGDefaultDatabase,
 	)
-	cmdPsql.Env = getEnv(password, sslmode)
-	out, err := cmdPsql.CombinedOutput()
+	cmdPgIsReady.Env = getEnv(password, sslmode)
+	out, err := cmdPgIsReady.CombinedOutput()
 
 	return err == nil, out
 }
@@ -53,7 +49,7 @@ func PsqlWaitDatabaseUp(ip, user, password, sslmode string) {
 		if count == 10 {
 			log.Fatalf("Failed to connect to database: %s\n", string(out))
 		}
-		if connected, out = PsqlIsDatabaseUp(ip, user, password, sslmode); connected {
+		if connected, out = PgIsReady(ip, user, password, sslmode); connected {
 			break
 		} else {
 			count++
