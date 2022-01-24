@@ -27,9 +27,9 @@ var initCmd = &cobra.Command{
 		var err error
 
 		trekVersion := os.Getenv("TREK_VERSION")
-		modelName := os.Getenv("MODEL_NAME")
-		dbName := os.Getenv("DATABASE_NAME")
-		dbUsers := os.Getenv("DATABASE_USERS")
+		modelName := os.Getenv("TREK_MODEL_NAME")
+		dbName := os.Getenv("TREK_DATABASE_NAME")
+		dbUsers := os.Getenv("TREK_DATABASE_USERS")
 
 		if trekVersion == "" {
 			trekVersionPrompt := promptui.Prompt{

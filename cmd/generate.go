@@ -250,7 +250,9 @@ func diffSchemaDumps(config *internal.Config, targetContainerID, migrateContaine
 		"--exclude-table=public.schema_migrations",
 	}
 
-	targetDump, err := internal.PgDump(targetIP,
+	targetDump, err := internal.PgDump(
+		targetIP,
+		internal.PGDefaultPort,
 		internal.PGDefaultUsername,
 		internal.PGDefaultPassword,
 		"disable",
@@ -262,7 +264,9 @@ func diffSchemaDumps(config *internal.Config, targetContainerID, migrateContaine
 		return "", err
 	}
 
-	migrateDump, err := internal.PgDump(migrateIP,
+	migrateDump, err := internal.PgDump(
+		migrateIP,
+		internal.PGDefaultPort,
 		internal.PGDefaultUsername,
 		internal.PGDefaultPassword,
 		"disable",
@@ -595,9 +599,16 @@ func setupDatabase(containerName string, config *internal.Config) (containerIP s
 		return "", fmt.Errorf("failed to get container IP: %w", err)
 	}
 
-	internal.PsqlWaitDatabaseUp(ip, internal.PGDefaultUsername, internal.PGDefaultPassword, "disable")
+	internal.PsqlWaitDatabaseUp(
+		ip,
+		internal.PGDefaultPort,
+		internal.PGDefaultUsername,
+		internal.PGDefaultPassword,
+		"disable",
+	)
 	err = internal.PsqlHelperSetupDatabaseAndUsers(
 		ip,
+		internal.PGDefaultPort,
 		internal.PGDefaultUsername,
 		internal.PGDefaultPassword,
 		"disable",

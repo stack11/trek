@@ -10,6 +10,8 @@ import (
 
 const (
 	//nolint:gochecknoglobals
+	PGDefaultPort = "5432"
+	//nolint:gochecknoglobals
 	PGDefaultUsername = "postgres"
 	//nolint:gochecknoglobals
 	PGDefaultPassword = "postgres"
@@ -25,7 +27,7 @@ func getEnv(password, sslmode string) []string {
 	)
 }
 
-func PsqlIsDatabaseUp(ip, user, password, sslmode string) (up bool, out []byte) {
+func PsqlIsDatabaseUp(ip, port, user, password, sslmode string) (up bool, out []byte) {
 	cmdPsql := exec.Command(
 		"psql",
 		"--echo-errors",
@@ -35,6 +37,8 @@ func PsqlIsDatabaseUp(ip, user, password, sslmode string) (up bool, out []byte) 
 		user,
 		"--host",
 		ip,
+		"--port",
+		port,
 		"--command",
 		"\\l",
 		PGDefaultDatabase,
@@ -45,7 +49,7 @@ func PsqlIsDatabaseUp(ip, user, password, sslmode string) (up bool, out []byte) 
 	return err == nil, out
 }
 
-func PsqlWaitDatabaseUp(ip, user, password, sslmode string) {
+func PsqlWaitDatabaseUp(ip, port, user, password, sslmode string) {
 	var connected bool
 	var out []byte
 	count := 0
@@ -53,7 +57,7 @@ func PsqlWaitDatabaseUp(ip, user, password, sslmode string) {
 		if count == 10 {
 			log.Fatalf("Failed to connect to database: %s\n", string(out))
 		}
-		if connected, out = PsqlIsDatabaseUp(ip, user, password, sslmode); connected {
+		if connected, out = PsqlIsDatabaseUp(ip, port, user, password, sslmode); connected {
 			break
 		} else {
 			count++
@@ -62,7 +66,7 @@ func PsqlWaitDatabaseUp(ip, user, password, sslmode string) {
 	}
 }
 
-func PsqlCommand(ip, user, password, sslmode, database, command string) error {
+func PsqlCommand(ip, port, user, password, sslmode, database, command string) error {
 	cmdPsql := exec.Command(
 		"psql",
 		"--echo-errors",
@@ -72,6 +76,8 @@ func PsqlCommand(ip, user, password, sslmode, database, command string) error {
 		user,
 		"--host",
 		ip,
+		"--port",
+		port,
 		"--command",
 		command,
 		database,
@@ -112,13 +118,15 @@ func PsqlFile(ip, user, password, sslmode, database, file string) error {
 	return nil
 }
 
-func PgDump(ip, user, password, sslmode, database string, args []string) (string, error) {
+func PgDump(ip, port, user, password, sslmode, database string, args []string) (string, error) {
 	cmd := []string{
 		"pg_dump",
 		"--user",
 		user,
 		"--host",
 		ip,
+		"--port",
+		port,
 	}
 	cmd = append(cmd, args...)
 	cmd = append(cmd, database)
@@ -136,13 +144,13 @@ func PgDump(ip, user, password, sslmode, database string, args []string) (string
 	return string(stdout), nil
 }
 
-func PsqlHelperSetupDatabaseAndUsers(ip, user, password, sslmode, database string, users []string) error {
-	err := PsqlCommand(ip, user, password, sslmode, PGDefaultDatabase, fmt.Sprintf("CREATE DATABASE %q;", database))
+func PsqlHelperSetupDatabaseAndUsers(ip, port, user, password, sslmode, database string, users []string) error {
+	err := PsqlCommand(ip, port, user, password, sslmode, PGDefaultDatabase, fmt.Sprintf("CREATE DATABASE %q;", database))
 	if err != nil {
 		return err
 	}
 	for _, u := range users {
-		err = PsqlCommand(ip, user, password, sslmode, PGDefaultDatabase, fmt.Sprintf("CREATE ROLE %q WITH LOGIN;", u))
+		err = PsqlCommand(ip, port, user, password, sslmode, PGDefaultDatabase, fmt.Sprintf("CREATE ROLE %q WITH LOGIN;", u))
 		if err != nil {
 			return err
 		}
@@ -151,9 +159,10 @@ func PsqlHelperSetupDatabaseAndUsers(ip, user, password, sslmode, database strin
 	return nil
 }
 
-func PsqlHelperSetupDatabaseAndUsersDrop(ip, user, password, sslmode, database string, users []string) error {
+func PsqlHelperSetupDatabaseAndUsersDrop(ip, port, user, password, sslmode, database string, users []string) error {
 	err := PsqlCommand(
 		ip,
+		port,
 		user,
 		password,
 		sslmode,
@@ -164,7 +173,7 @@ func PsqlHelperSetupDatabaseAndUsersDrop(ip, user, password, sslmode, database s
 		return err
 	}
 	for _, u := range users {
-		err = PsqlCommand(ip, user, password, sslmode, PGDefaultDatabase, fmt.Sprintf("DROP ROLE IF EXISTS %s", u))
+		err = PsqlCommand(ip, port, user, password, sslmode, PGDefaultDatabase, fmt.Sprintf("DROP ROLE IF EXISTS %s", u))
 		if err != nil {
 			return err
 		}

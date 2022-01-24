@@ -3,7 +3,7 @@ package internal
 import "os"
 
 func GetSSLMode() string {
-	if os.Getenv("DISABLE_SSL") == "true" {
+	if os.Getenv("TREK_DISABLE_SSL") == "true" {
 		return "disable"
 	}
 

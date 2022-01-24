@@ -36,27 +36,30 @@ var applyCmd = &cobra.Command{
 			log.Fatalf("Failed to get working directory: %v\n", err)
 		}
 
-		pgHost := os.Getenv("PGHOST")
-		pgUser := os.Getenv("PGUSER")
-		pgPassword := os.Getenv("PGPASSWORD")
-		resetDB := os.Getenv("RESET_DB") == "true"
-		insertTestData := os.Getenv("INSERT_TEST_DATA") == "true"
+		pgHost := os.Getenv("TREK_PGHOST")
+		pgPort := os.Getenv("TREK_PGPORT")
+		pgUser := os.Getenv("TREK_PGUSER")
+		pgPassword := os.Getenv("TREK_PGPASSWORD")
+		resetDB := os.Getenv("TREK_RESET_DB") == "true"
+		insertTestData := os.Getenv("TREK_INSERT_TEST_DATA") == "true"
 		sslMode := internal.GetSSLMode()
 		migrateDSN := fmt.Sprintf(
-			"postgres://%s:%s@%s:5432/%s?sslmode=%s",
+			"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 			pgUser,
 			pgPassword,
 			pgHost,
+			pgPort,
 			config.DatabaseName,
 			sslMode,
 		)
 
-		internal.PsqlWaitDatabaseUp(pgHost, pgUser, pgPassword, sslMode)
+		internal.PsqlWaitDatabaseUp(pgHost, pgPort, pgUser, pgPassword, sslMode)
 
 		if resetDB {
 			// Pass empty user list so the roles don't get dropped
 			err = internal.PsqlHelperSetupDatabaseAndUsersDrop(
 				pgHost,
+				pgPort,
 				pgUser,
 				pgPassword,
 				sslMode,
@@ -71,6 +74,7 @@ var applyCmd = &cobra.Command{
 		// It will fail on roles that already exist, but that can be ignored
 		err = internal.PsqlHelperSetupDatabaseAndUsers(
 			pgHost,
+			pgPort,
 			pgUser,
 			pgPassword,
 			sslMode,
