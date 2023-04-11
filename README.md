@@ -1,5 +1,7 @@
 # trek
 
+**This project has moved to [github.com/printeers/trek](https://github.com/printeers/trek).**
+
 ## Requirements
 At least version 13 of postgres is needed.
 
